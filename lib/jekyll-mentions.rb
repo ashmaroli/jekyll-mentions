@@ -20,13 +20,9 @@ module Jekyll
 
         src = mention_base(doc.site.config)
         if content.include? BODY_START_TAG
-          head, opener, tail = content.partition(OPENING_BODY_TAG_REGEX)
-          body_content, _, rest = tail.partition("</body>")
-
-          return unless body_content =~ filter_regex
-
-          processed_markup = filter_with_mention(src).call(body_content)[:output].to_s
-          doc.output = head << opener << processed_markup << "</body>" << rest
+          doc.output = content.gsub!(%r!(<body.*?>\s*)(.*?)</body>!m) do
+            $1 << filter_with_mention(src).call($2)[:output].to_s << "</body>"
+          end || doc.output
         else
           return unless content =~ filter_regex
 
